@@ -1,5 +1,5 @@
+# https://snapcraft.io/docs/snapcraft-yaml-reference
 name: factorio-headless
-version: '0.18.38'
 summary: Headless server for Factorio running as a system service
 description: |
   Change configuration options
@@ -21,10 +21,10 @@ description: |
 
     ls /var/snap/factorio-headless/common
 
+adopt-info: factorio
+base: core18
 grade: stable
 confinement: strict
-base: core18
-
 architectures:
   - build-on: amd64
 
@@ -44,10 +44,14 @@ apps:
 
 parts:
   factorio:
-    plugin: dump
-    source: https://www.factorio.com/get-download/$SNAPCRAFT_PROJECT_VERSION/headless/linux64
-    #source: .local/factorio_headless_x64_$SNAPCRAFT_PROJECT_VERSION.tar.xz
+    source: https://www.factorio.com/get-download/latest/headless/linux64
     source-type: tar
+    plugin: dump
+    override-build: |
+      snapcraftctl build
+      snapcraftctl set-version `cat data/base/info.json | jq -r .version`
+    build-snaps:
+      - jq
     stage:
       - -factorio/config-path.cfg
     organize:
