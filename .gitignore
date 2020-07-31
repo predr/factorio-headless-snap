@@ -1,5 +1,2 @@
-# developer tools
-.idea
-
-# local tests
-.local
+squashfs-root
+*.snap

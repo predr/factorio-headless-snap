@@ -1,16 +1,15 @@
-Factorio Headless Snap
-===============
+[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg)](https://snapcraft.io/factorio-headless)
 
-Headless server for Factorio running as a system service.
+### Headless server for Factorio running as a system service.
 
-Change configuration options
+Change configuration options.
 
 	sudo snap get factorio-headless
 	sudo snap set factorio-headless admins='["kovarex"]'
 	sudo snap set factorio-headless game-password=1337
 	sudo snap restart factorio-headless
 
-Control the service and check status
+Control the service and check status.
 
 	sudo snap start factorio-headless
 	sudo snap stop factorio-headless
@@ -18,18 +17,6 @@ Control the service and check status
 	sudo snap stop --disable factorio-headless
 	sudo snap services | grep factorio-headless
 
-Server files location
+Server files location.
 
 	ls /var/snap/factorio-headless/common
-
-## Install
-
-Get it from the Snap Store or install in terminal.
-
-[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg)](https://snapcraft.io/factorio-headless)
-
-	snap install factorio-headless
-
-## Links
-
-- [Factorio Website](https://factorio.com).
