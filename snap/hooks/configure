@@ -13,6 +13,7 @@ CONFIG_TOKEN=$(snapctl get token)
 CONFIG_GAME_PASSWORD=$(snapctl get game-password)
 CONFIG_REQUIRE_USER_VERIFICATION=$(snapctl get require-user-verification)
 CONFIG_MAX_UPLOAD_IN_KILOBYTES_PER_SECOND=$(snapctl get max-upload-in-kilobytes-per-second)
+CONFIG_MAX_UPLOAD_SLOTS=$(snapctl get max-upload-slots)
 CONFIG_MINIMUM_LATENCY_IN_TICKS=$(snapctl get minimum-latency-in-ticks)
 CONFIG_IGNORE_PLAYER_LIMIT_FOR_RETURNING_PLAYERS=$(snapctl get ignore-player-limit-for-returning-players)
 CONFIG_ALLOW_COMMANDS=$(snapctl get allow-commands)
@@ -23,7 +24,10 @@ CONFIG_AUTO_PAUSE=$(snapctl get auto-pause)
 CONFIG_ONLY_ADMINS_CAN_PAUSE_THE_GAME=$(snapctl get only-admins-can-pause-the-game)
 CONFIG_AUTOSAVE_ONLY_ON_SERVER=$(snapctl get autosave-only-on-server)
 CONFIG_NON_BLOCKING_SAVING=$(snapctl get non-blocking-saving)
-CONFIG_ADMINS=$(printf %q $(snapctl get admins))
+CONFIG_MINIMUM_SEGMENT_SIZE=$(snapctl get minimum-segment-size)
+CONFIG_MINIMUM_SEGMENT_SIZE_PEER_COUNT=$(snapctl get minimum-segment-size-peer-count)
+CONFIG_MAXIMUM_SEGMENT_SIZE=$(snapctl get maximum-segment-size)
+CONFIG_MAXIMUM_SEGMENT_SIZE_PEER_COUNT=$(snapctl get maximum-segment-size-peer-count)
 
 # Apply configuration to template.json
 sed -e "s:CONFIG_NAME:${CONFIG_NAME}:g" \
@@ -38,6 +42,7 @@ sed -e "s:CONFIG_NAME:${CONFIG_NAME}:g" \
 	-e "s:CONFIG_GAME_PASSWORD:${CONFIG_GAME_PASSWORD}:g" \
 	-e "s:CONFIG_REQUIRE_USER_VERIFICATION:${CONFIG_REQUIRE_USER_VERIFICATION}:g" \
 	-e "s:CONFIG_MAX_UPLOAD_IN_KILOBYTES_PER_SECOND:${CONFIG_MAX_UPLOAD_IN_KILOBYTES_PER_SECOND}:g" \
+	-e "s:CONFIG_MAX_UPLOAD_SLOTS:${CONFIG_MAX_UPLOAD_SLOTS}:g" \
 	-e "s:CONFIG_MINIMUM_LATENCY_IN_TICKS:${CONFIG_MINIMUM_LATENCY_IN_TICKS}:g" \
 	-e "s:CONFIG_IGNORE_PLAYER_LIMIT_FOR_RETURNING_PLAYERS:${CONFIG_IGNORE_PLAYER_LIMIT_FOR_RETURNING_PLAYERS}:g" \
 	-e "s:CONFIG_ALLOW_COMMANDS:${CONFIG_ALLOW_COMMANDS}:g" \
@@ -48,5 +53,8 @@ sed -e "s:CONFIG_NAME:${CONFIG_NAME}:g" \
 	-e "s:CONFIG_ONLY_ADMINS_CAN_PAUSE_THE_GAME:${CONFIG_ONLY_ADMINS_CAN_PAUSE_THE_GAME}:g" \
 	-e "s:CONFIG_AUTOSAVE_ONLY_ON_SERVER:${CONFIG_AUTOSAVE_ONLY_ON_SERVER}:g" \
 	-e "s:CONFIG_NON_BLOCKING_SAVING:${CONFIG_NON_BLOCKING_SAVING}:g" \
-	-e "s:CONFIG_ADMINS:${CONFIG_ADMINS}:g" \
+	-e "s:CONFIG_MINIMUM_SEGMENT_SIZE:${CONFIG_MINIMUM_SEGMENT_SIZE}:g" \
+	-e "s:CONFIG_MINIMUM_SEGMENT_SIZE_PEER_COUNT:${CONFIG_MINIMUM_SEGMENT_SIZE_PEER_COUNT}:g" \
+	-e "s:CONFIG_MAXIMUM_SEGMENT_SIZE:${CONFIG_MAXIMUM_SEGMENT_SIZE}:g" \
+	-e "s:CONFIG_MAXIMUM_SEGMENT_SIZE_PEER_COUNT:${CONFIG_MAXIMUM_SEGMENT_SIZE_PEER_COUNT}:g" \
 	$SNAP/factorio/server-settings.template > $SNAP_COMMON/server-settings.json

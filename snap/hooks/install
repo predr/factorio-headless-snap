@@ -18,6 +18,7 @@ snapctl set \
 	game-password="" \
  	require-user-verification=true \
   	max-upload-in-kilobytes-per-second=0 \
+	max-upload-slots=5 \
 	minimum-latency-in-ticks=0 \
 	ignore-player-limit-for-returning-players=false \
 	allow-commands="admins-only" \
@@ -28,7 +29,10 @@ snapctl set \
 	only-admins-can-pause-the-game=true \
 	autosave-only-on-server=true \
 	non-blocking-saving=false \
-	admins='[]' \
+	minimum-segment-size=25 \
+	minimum-segment-size-peer-count=20 \
+	miximum-segment-size=100 \
+	miximum-segment-size-peer-count=10 \
 	port="" \
 	bind="" \
 	rcon-port="" \
