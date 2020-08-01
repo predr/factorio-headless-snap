@@ -1,7 +1,7 @@
-#!/bin/bash -e
+#!/bin/bash
 
 # Copy common data such as saves and server config to $SNAP-COMMON directory
-cp --recursive $SNAP/common/* $SNAP_COMMON/
+cp --recursive "$SNAP"/common/* "$SNAP_COMMON"/
 
 # Setup default values so server configuration templates properly
 # Last 4 are for command line
@@ -31,8 +31,8 @@ snapctl set \
 	non-blocking-saving=false \
 	minimum-segment-size=25 \
 	minimum-segment-size-peer-count=20 \
-	miximum-segment-size=100 \
-	miximum-segment-size-peer-count=10 \
+	maximum-segment-size=100 \
+	maximum-segment-size-peer-count=10 \
 	port="" \
 	bind="" \
 	rcon-port="" \
