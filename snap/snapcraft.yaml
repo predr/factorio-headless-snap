@@ -39,7 +39,7 @@ apps:
 
   factorio-headless:
     command: factorio/factorio-headless.server
-    completer: factorio/bash-completion
+    completer: completion
     plugs: [network, network-bind]
 
 parts:
@@ -78,3 +78,7 @@ parts:
       - libslang2
       - curl
       - jq
+
+  scripts:
+    source: scripts/
+    plugin: dump
