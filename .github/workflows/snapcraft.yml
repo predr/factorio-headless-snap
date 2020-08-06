@@ -43,9 +43,9 @@ jobs:
           export BETA_RELEASE=$beta_release
         fi
 
-    # - id: checkout
-    #   if: env.BETA_RELEASE != "" || env.STABLE_RELEASE != ""
-    #   uses: actions/checkout@v2
+    - id: checkout
+      if: ${{ env.BETA_RELEASE != "" || env.STABLE_RELEASE != "" }}
+      uses: actions/checkout@v2
 
     # - id: build
     #   if: env.BETA_RELEASE != "" || env.STABLE_RELEASE != ""
