@@ -1,0 +1,55 @@
+name: Automatic Release
+
+on:
+  schedule:
+    - cron: "30 */12 * * *"
+
+jobs:
+  build:
+    if: false # disabled for now
+    runs-on: ubuntu-latest
+    steps:
+      - id: compare
+        run: |
+          releases=$(wget -qO- "https://factorio.com/api/latest-releases")
+          info=$(wget -qO- --header "Snap-Device-Series: 16" \
+            https://api.snapcraft.io/v2/snaps/info/factorio-headless)
+          
+          [[ -z "$releases" || -z "$info" ]] && exit 1
+          
+          channels=($(jq -r '.["channel-map"][].channel.name' <<< "$info"))
+          versions=($(jq -r '.["channel-map"][].version' <<< "$info"))
+          
+          for (( i=0; i < ${#channels[@]}; i++ )); do
+            eval ${channels[$i]}=\${versions[\$i]}
+          done
+          
+          [[ "$beta" == "$(jq -r .experimental.headless <<< "$releases")" ]] || \
+              echo "::set-env name=RELEASE_BETA::true"
+          
+          [[ "$stable" == "$(jq -r .stable.headless <<< "$releases")" ]] || \
+              echo "::set-env name=RELEASE_STABLE::true"
+
+      - id: checkout
+        if: ${{ env.RELEASE_BETA || env.RELEASE_STABLE }}
+        uses: actions/checkout@v2
+
+      - id: build
+        if: ${{ env.RELEASE_BETA || env.RELEASE_STABLE }}
+        uses: snapcore/action-build@v1
+
+      - id: publish-beta
+        if: ${{ env.RELEASE_BETA }}
+        uses: snapcore/action-publish@v1
+        with:
+          store_login: ${{ secrets.STORE_LOGIN }}
+          snap: ${{ steps.build.outputs.snap }}
+          release: beta
+
+      - id: publish-stable
+        if: ${{ env.RELEASE_STABLE }}
+        uses: snapcore/action-publish@v1
+        with:
+          store_login: ${{ secrets.STORE_LOGIN }}
+          snap: ${{ steps.build.outputs.snap }}
+          release: stable
