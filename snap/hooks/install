@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Copy common data such as saves and server config to $SNAP-COMMON directory
-cp --recursive "$SNAP"/common/* "$SNAP_COMMON"/
-
 # Setup default values so server configuration templates properly
 # Last 4 are for command line
 snapctl set \
@@ -36,4 +33,5 @@ snapctl set \
 	port="" \
 	bind="" \
 	rcon-port="" \
+	rcon-bind="" \
 	rcon-password="" \

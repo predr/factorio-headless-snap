@@ -1,0 +1,130 @@
+#!/bin/bash
+
+BASE="${SNAP_VERSION%*.*}"
+MODS_API_URL="https://mods.factorio.com/api/mods?version=${BASE}&page_size=max"
+MODS="$SNAP_DATA"/cache/mods.json
+LIST="$SNAP_DATA"/data/mods/mod-list.json
+MOD_URL="https://mods.factorio.com/mod"
+
+function mods_help {
+	echo 'Easier management of mods.
+
+Usage: factorio-headless.mods <command> [<name>|<query>]
+
+Commands:
+	list             Lists installed mods
+	info <name>      Shows mod information 
+	search <query>   Search available mods
+	install <name>   Install mod by name
+	remove <name>    Remove mod by name
+'
+}
+
+function mods_user {
+	if [[ -z "$(snapctl get username)" && -z "$(snapctl get token)" ]]; then
+		echo 'Please set your username and password. Password is only used to get access token and never saved.'
+		echo 'snap set factorio-headless username="user" password="your password"'
+		return 1
+	fi
+}
+
+function mods_init {
+	if [[ ! -f "$MODS" ]]; then
+		echo "Updating mods list..."
+		curl --silent "$MODS_API_URL" > "$MODS"
+	fi
+}
+
+function mods_list {
+	mods_init || exit 1
+
+	mods_list=$(jq -r '(.mods[] | select(.name != "base") .name)' "$LIST")
+	if [[ ! -z "$mods_list" ]]; then
+		echo "$mods_list"
+		return 0
+	fi
+	echo "0 mods installed!"
+}
+
+#
+#
+function mods_info {
+	mods_init || exit 1
+
+	mod_json=$(jq -r --arg name "${1}" \
+		'(.results[] | select(.name == $name))' "$MODS")
+
+	if [[ ! -z "$mod_json" ]]; then
+		echo "Title:    "$(jq -r .title <<< "$mod_json")
+		echo "Owner:    "$(jq -r .owner <<< "$mod_json")
+		echo "Version:  "$(jq -r .latest_release.version <<< "$mod_json")
+		echo "Summary:  "$(jq -r .summary <<< "$mod_json")
+		echo "Category: "$(jq -r .category <<< "$mod_json")
+		echo "Score:    "$(jq -r .score <<< "$mod_json")
+		echo "URL:      "$MOD_URL/$(jq -r .name <<< "$mod_json")
+	else
+		echo "Unknown mod $1"
+	fi
+}
+
+function mods_search {
+	mods_init || exit 1
+
+	echo TODO
+}
+
+# Installs one or more mods by downloading them into mod directory and adding
+# them to mod-list.json. Username and token are required to download mods.
+# TODO download to cache first and check download before installing
+# TODO check mod already installed
+function mods_install {
+	mods_init && mods_user || exit 1
+	
+	while [[ ! -z "$@" ]]; do
+		mod_json=$(jq -r --arg name "$1" \
+			'(.results[] | select(.name == $name))' "$MODS")
+
+		if [[ -z "$mod_json" ]]; then
+			echo "Uknown mod $1" && return 1
+		fi
+
+		url=$(jq -r '.latest_release.download_url' <<< "$mod_json")
+		file=$(jq -r '.latest_release.file_name' <<< "$mod_json")
+		user=$(snapctl get username)
+		token=$(snapctl get token)
+
+		echo -en "Downloading  $file"
+		curl --silent --output "$SNAP_DATA"/data/mods/"$file" --location \
+			"https://mods.factorio.com/${url}?username=${user}&token=${token}"
+
+		echo -en "\rInstalling   $file"
+		new_list=$(jq -r --arg name "${1}" \
+			'.mods |= . + [{"name":$name,"enabled":true}]' "$LIST")
+		echo "$new_list" > "$LIST"
+
+		echo -en "\rInstalled    $file\n"
+		shift
+	done
+}
+
+function mods_update {
+	mods_init && mods_user || exit 1
+
+	echo TODO
+}
+
+function mods_remove {
+	mods_init || exit 1
+
+	echo TODO
+}
+
+case "$1" in
+    list)    mods_list;;
+	info)    shift; mods_info    "$@";;
+	search)  shift; mods_search  "$@";;
+	install) shift; mods_install "$@";;
+	update)  shift; mods_update  "$@";;
+	remove)  shift; mods_remove  "$@";;
+	*)       mods_help;;
+esac

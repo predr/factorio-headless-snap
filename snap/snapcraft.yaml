@@ -1,4 +1,3 @@
-# https://snapcraft.io/docs/snapcraft-yaml-reference
 name: factorio-headless
 summary: Headless server for Factorio running as a system service
 description: |
@@ -28,19 +27,28 @@ confinement: strict
 architectures:
   - build-on: amd64
 
-apps:
-  service:
-    command: factorio/factorio-headless.start
-    daemon: forking
-    stop-timeout: 20s
-    stop-command: factorio/factorio-headless.stop
-    restart-condition: on-success
-    plugs: [network, network-bind]
+system-usernames:
+  snap_daemon: shared
 
+apps:
   factorio-headless:
-    command: factorio/factorio-headless.server
+    command: wrapper factorio-headless
     completer: completion
-    plugs: [network, network-bind]
+    plugs: &plugs
+      - home
+      - network
+      - network-bind
+  
+  mods:
+    command: wrapper mods
+    completer: completion
+    plugs: *plugs
+
+  service:
+    command: wrapper service
+    daemon: simple
+    stop-timeout: 1m
+    plugs: *plugs
 
 parts:
   factorio:
@@ -50,35 +58,21 @@ parts:
     override-build: |
       snapcraftctl build
       snapcraftctl set-version `cat data/base/info.json | jq -r .version`
-    build-snaps:
+    build-packages:
       - jq
-    stage:
-      - -factorio/config-path.cfg
     organize:
-      '*' : factorio/
+      '*': factorio/
 
   config:
-    after:
-      - factorio
     source: config/
     plugin: dump
     organize:
-      '*' : factorio/
-
-  common:
-    source: common/
-    plugin: dump
-    organize:
-      '*' : common/
-
-  server:
-    plugin: nil
-    stage-packages:
-      - whiptail
-      - libslang2
-      - curl
-      - jq
+      '*': factorio/
 
   scripts:
     source: scripts/
     plugin: dump
+    stage-packages:
+      - setpriv
+      - curl
+      - jq

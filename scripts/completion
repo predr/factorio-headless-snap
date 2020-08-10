@@ -1,6 +1,6 @@
 #!bin/bash
 
-function _factorio-headless {
+function _factorio_headless {
 
     local cur prev words cword split
     _init_completion -s || return
@@ -132,4 +132,41 @@ function _factorio-headless {
     esac
 }
 
-complete -F _factorio-headless factorio-headless
+function _factorio_headless_mods {
+
+    local cur prev words cword split
+    _init_completion -s || return
+
+    local ALL_OPTIONS='
+        list
+	    info
+	    search
+	    install
+	    update
+	    remove
+    '
+
+    case "$prev" in
+        info)
+            names=$(jq -r '(.results[] | .name)' $SNAP_DATA/cache/mods.json)
+            reply=$( compgen -W "${names//\ /\%20}" -- "${cur//\\ /\%20}" )
+            COMPREPLY=( "${reply//\%20/\\ }" )
+            ;;
+        install)
+            names=$(jq -r '(.results[] | .name)' $SNAP_DATA/cache/mods.json)
+            reply=$( compgen -W "${names//\ /\%20}" -- "${cur//\\ /\%20}" )
+            COMPREPLY=( "${reply//\%20/\\ }" )
+            ;;
+        remove)
+            names=$(jq -r '(.mods[] | select(.name != "base") .name)' $SNAP_DATA/data/mods/mod-list.json)
+            reply=$( compgen -W "${names//\ /\%20}" -- "${cur//\\ /\%20}" )
+            COMPREPLY=( "${reply//\%20/\\ }" )
+            ;;
+        *)
+            COMPREPLY=($( compgen -W "$ALL_OPTIONS" -- "$cur" ))
+            ;;
+    esac
+}
+
+complete -F _factorio_headless factorio-headless
+complete -F _factorio_headless_mods factorio-headless.mods

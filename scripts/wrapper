@@ -1,0 +1,158 @@
+#!/bin/bash
+
+function factorio_help {
+    status=$(snapctl services "$SNAP_INSTANCE_NAME")
+    active=$(grep -q ' active' <<< "$status" && echo Active || echo Inactive)
+    enabled=$(grep -q enabled <<< "$status" && echo Enabled || echo Disabled)
+    less -C -P "Press q to exit" << EOF
+
+        Factorio Headless Server
+
+   Current: $active
+   Startup: $enabled
+
+
+        Change settings
+
+Settings are integrated with Snap's get and set commands. Get command allows you to view current server options. Use set command to change server settings and then restart server to apply changes.
+
+    snap get $SNAP_INSTANCE_NAME                   # lists all settings
+    snap get $SNAP_INSTANCE_NAME auto-pause        # shows auto-pause value
+    snap set $SNAP_INSTANCE_NAME auto-pause=false  # changes auto-pause value
+
+In addition to server settings; port, bind, rcon-port, rcon-bind, rcon-password are also used with Snap's set command and will be applied if set. Unset them to use default values.
+
+    snap set $SNAP_INSTANCE_NAME port=34198        # will use port 34198
+    snap unset $SNAP_INSTANCE_NAME port            # will use default port
+
+
+        Manage mods
+
+For mod management there is $SNAP_INSTANCE_NAME.mods command. This command allows you to view mod information, install it and list currently installed mods. In future revisions remove and update mods are also planned.
+
+    $SNAP_INSTANCE_NAME.mods info Honk             # shows mod information
+    $SNAP_INSTANCE_NAME.mods install Honk          # installs mod
+    $SNAP_INSTANCE_NAME.mods list                  # lists installed mods
+
+
+        Control and monitoring
+
+To control server activity use snap's start, restart and stop commands.
+
+    snap start $SNAP_INSTANCE_NAME
+    snap restart $SNAP_INSTANCE_NAME
+    snap stop $SNAP_INSTANCE_NAME
+
+Snap's start and stop commands have additional arguments --enable and --disable respectively to control starting server on system boot.
+
+    snap start --enable $SNAP_INSTANCE_NAME
+    snap stop --disable $SNAP_INSTANCE_NAME
+
+Snap's logs command lists recent log lines and with additional parameter -f will print them as they come in.
+
+    snap logs -f $SNAP_INSTANCE_NAME
+
+
+        Automate installations
+
+Using all these commands we can make a bash script to automate installations with desired options, mods, map settings and even make a map preview. 
+
+    #!/bin/bash
+    settings=(
+        username="kovarex"
+        token="p8983aa88xs72977h8r8wfcn6m6hvp"
+        name="My Server"
+        description="My Awesome Server"
+        tags='["awesome","server"]'
+        non-blocking-saving=true
+        auto-pause=false
+    )
+    mods=(
+        Honk
+    )
+    map=(
+        --map-gen-seed 1337
+        --create /var/snap/factorio-headless/current/data/saves/_autosave1.zip
+    )
+    preview=(
+        --map-preview-scale 10
+        --map-preview-size 4000
+        --generate-map-preview preview.png
+    )
+    snap install $SNAP_INSTANCE_NAME
+    snap stop $SNAP_INSTANCE_NAME
+    snap set $SNAP_INSTANCE_NAME "${settings[@]}"
+    $SNAP_INSTANCE_NAME.mods install "${mods[@]}"
+    $SNAP_INSTANCE_NAME "${map[@]}"
+    $SNAP_INSTANCE_NAME "${preview[@]}"
+    snap start $SNAP_INSTANCE_NAME.service
+    snap logs -f $SNAP_INSTANCE_NAME.service
+
+Important thing to note here is that server must be stopped upon installation. Otherwise it will auto-generate a map and create a lock. This would prevent generating a map with custom settings and previews.
+
+EOF
+}
+
+# Generate a save for server to start with but wait 5 seconds to allow
+# automated install scripts to interrupt and provide their own saves.
+# Remove tmp save because it breaks --start-server-load-latest.
+function factorio_saves {
+    if [[ -z "$(ls "${SNAP_DATA}"/data/saves)" ]]; then
+        timer=5
+        while [[ -z "$(ls "${SNAP_DATA}"/data/saves)" ]]; do
+            if [[ $timer -eq 1 ]]; then
+                factorio_exec --create \
+                    "${SNAP_DATA}"/data/saves/_autosave1.zip
+            fi
+            sleep 1 && (( timer-- ))
+        done
+    else
+        rm --force "${SNAP_DATA}"/data/saves/*.tmp.zip
+    fi
+}
+
+# Execute factorio as snap_daemon user instead of root.
+function factorio_exec {
+    exec "$SNAP"/usr/bin/setpriv --clear-groups \
+        --reuid snap_daemon --regid snap_daemon \
+        -- "${SNAP}"/factorio/bin/x64/factorio "$@"
+}
+
+# Initialize directories with open permissions.
+dirs=(cache data data/mods data/saves data/scenarios data/temp)
+for dir in "${dirs[@]}"; do
+    if [[ ! -d "${SNAP_DATA}"/"$dir" ]]; then
+        mkdir --parents "${SNAP_DATA}"/"$dir"
+        chmod 777 "$SNAP_DATA"/"$dir"
+        chown snap_daemon "$SNAP_DATA"/"$dir"
+    fi
+done
+
+# Each needs to be handled differently and all need to work together.
+case "$1" in
+    factorio-headless)
+        shift
+        if [[ -z "$*" ]]; then
+            factorio_help && exit 0
+        fi
+        "${SNAP}"/factorio/bin/x64/factorio "$@"
+        ;;
+
+    mods)
+        shift
+        "$SNAP"/mods "$@"
+        ;;
+
+    service)
+        factorio_saves
+
+        cmd=(--verbose --start-server-load-latest)
+        for arg in port bind rcon-port rcon-bind rcon-password; do
+            if [[ -n "$(snapctl get $arg)" ]]; then
+                cmd+=("--$arg" "$(snapctl get $arg)")
+            fi
+        done
+
+        factorio_exec "${cmd[@]}"
+        ;;
+esac
