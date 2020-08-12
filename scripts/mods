@@ -1,7 +1,7 @@
 #!/bin/bash
 
-BASE="${SNAP_VERSION%*.*}"
-MODS_API_URL="https://mods.factorio.com/api/mods?version=${BASE}&page_size=max"
+MODS_BASE="${SNAP_VERSION%*.*}"
+MODS_API_URL="https://mods.factorio.com/api/mods?version=${MODS_BASE}&page_size=max"
 MODS="$SNAP_DATA"/cache/mods.json
 LIST="$SNAP_DATA"/data/mods/mod-list.json
 MOD_URL="https://mods.factorio.com/mod"
@@ -98,9 +98,11 @@ function mods_install {
 			"https://mods.factorio.com/${url}?username=${user}&token=${token}"
 
 		echo -en "\rInstalling   $file"
-		new_list=$(jq -r --arg name "${1}" \
-			'.mods |= . + [{"name":$name,"enabled":true}]' "$LIST")
-		echo "$new_list" > "$LIST"
+		if [[ -f "$LIST" ]]; then
+			new_list=$(jq -r --arg name "${1}" \
+				'.mods[] | select(.name != $name) |= . + [{"name":$name,"enabled":true}]' "$LIST")
+			echo "$new_list" > "$LIST"
+		fi
 
 		echo -en "\rInstalled    $file\n"
 		shift
