@@ -2,7 +2,7 @@
 
 CONFIG_NAME=$(snapctl get name)
 CONFIG_DESCRIPTION=$(snapctl get description)
-CONFIG_TAGS=$(printf %q $(snapctl get tags))
+CONFIG_TAGS=$(printf %q "$(snapctl get tags)")
 CONFIG_MAX_PLAYERS=$(snapctl get max-players)
 CONFIG_VISIBILITY_PUBLIC=$(snapctl get visibility-public)
 CONFIG_VISIBILITY_LAN=$(snapctl get visibility-lan)
@@ -55,4 +55,4 @@ sed -e "s:CONFIG_NAME:${CONFIG_NAME}:g" \
 	-e "s:CONFIG_MINIMUM_SEGMENT_SIZE:${CONFIG_MINIMUM_SEGMENT_SIZE}:g" \
 	-e "s:CONFIG_MAXIMUM_SEGMENT_SIZE_PEER_COUNT:${CONFIG_MAXIMUM_SEGMENT_SIZE_PEER_COUNT}:g" \
 	-e "s:CONFIG_MAXIMUM_SEGMENT_SIZE:${CONFIG_MAXIMUM_SEGMENT_SIZE}:g" \
-	$SNAP/factorio/server-settings.template > "$SNAP_DATA"/data/server-settings.json
+	"$SNAP"/factorio/server-settings.template > "$SNAP_DATA"/data/server-settings.json

@@ -33,5 +33,4 @@ snapctl set \
 	port="" \
 	bind="" \
 	rcon-port="" \
-	rcon-bind="" \
 	rcon-password="" \

@@ -8,8 +8,8 @@ function factorio_help {
 
         Factorio Headless Server
 
-   Current: $active
-   Startup: $enabled
+    Status: $active
+    Startup: $enabled
 
 
         Change settings
@@ -93,6 +93,24 @@ Important thing to note here is that server must be stopped upon installation. O
 EOF
 }
 
+#
+#
+function factorio_token {
+    token=$(snapctl get token)
+    if [[ "${#token}" -ne 30 ]]; then
+        username=$(snapctl get username)
+        password=$(snapctl get password)
+        if [[ "${#username}" -gt 0 && "${#password}" -gt 0 ]]; then
+            token=$(curl --silent --location \
+                --data "username=$username&password=$password" \
+                "https://auth.factorio.com/api-login" | jq -r 'try .[0]')
+            if [[ "${#token}" -eq 30 ]]; then
+                snapctl set password="" token="$token"
+            fi
+        fi
+    fi
+}
+
 # Generate a save for server to start with but wait 5 seconds to allow
 # automated install scripts to interrupt and provide their own saves.
 # Remove tmp save because it breaks --start-server-load-latest.
@@ -127,6 +145,8 @@ for dir in "${dirs[@]}"; do
         chown snap_daemon "$SNAP_DATA"/"$dir"
     fi
 done
+
+factorio_token
 
 # Each needs to be handled differently and all need to work together.
 case "$1" in
