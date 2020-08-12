@@ -2,7 +2,7 @@
 
 CONFIG_NAME=$(snapctl get name)
 CONFIG_DESCRIPTION=$(snapctl get description)
-CONFIG_TAGS=$(printf %q "$(snapctl get tags)")
+CONFIG_TAGS=$(printf %q $(snapctl get tags))
 CONFIG_MAX_PLAYERS=$(snapctl get max-players)
 CONFIG_VISIBILITY_PUBLIC=$(snapctl get visibility-public)
 CONFIG_VISIBILITY_LAN=$(snapctl get visibility-lan)
