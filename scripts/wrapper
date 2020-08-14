@@ -20,10 +20,10 @@ Settings are integrated with Snap's get and set commands. Get command allows you
     snap get $SNAP_INSTANCE_NAME auto-pause        # shows auto-pause value
     snap set $SNAP_INSTANCE_NAME auto-pause=false  # changes auto-pause value
 
-In addition to server settings; port, bind, rcon-port, rcon-bind, rcon-password are also used with Snap's set command and will be applied if set. Unset them to use default values.
+In addition to server settings; port, bind, rcon-port, rcon-bind, rcon-password are also used with Snap's set command and will be applied if set. Set them to empty values to use defaults.
 
     snap set $SNAP_INSTANCE_NAME port=34198        # will use port 34198
-    snap unset $SNAP_INSTANCE_NAME port            # will use default port
+    snap set $SNAP_INSTANCE_NAME port=             # will use default port 34197
 
 
         Manage mods
@@ -93,8 +93,7 @@ Important thing to note here is that server must be stopped upon installation. O
 EOF
 }
 
-# 
-#
+# Get user token and unset user password.
 function factorio_token {
     token=$(snapctl get token)
     if [[ "${#token}" -ne 30 ]]; then
@@ -106,6 +105,8 @@ function factorio_token {
                 "https://auth.factorio.com/api-login" | jq -r 'try .[0]')
             if [[ "${#token}" -eq 30 ]]; then
                 snapctl set password="" token="$token"
+            else
+                echo "Error getting token!"
             fi
         fi
     fi
