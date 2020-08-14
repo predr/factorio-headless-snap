@@ -81,10 +81,10 @@ Using all these commands we can make a bash script to automate installations wit
     )
     snap install $SNAP_INSTANCE_NAME
     snap stop $SNAP_INSTANCE_NAME
-    snap set $SNAP_INSTANCE_NAME "${settings[@]}"
-    $SNAP_INSTANCE_NAME.mods install "${mods[@]}"
-    $SNAP_INSTANCE_NAME "${map[@]}"
-    $SNAP_INSTANCE_NAME "${preview[@]}"
+    snap set $SNAP_INSTANCE_NAME "\${settings[@]}"
+    $SNAP_INSTANCE_NAME.mods install "\${mods[@]}"
+    $SNAP_INSTANCE_NAME "\${map[@]}"
+    $SNAP_INSTANCE_NAME "\${preview[@]}"
     snap start $SNAP_INSTANCE_NAME.service
     snap logs -f $SNAP_INSTANCE_NAME.service
 
@@ -93,7 +93,7 @@ Important thing to note here is that server must be stopped upon installation. O
 EOF
 }
 
-#
+# 
 #
 function factorio_token {
     token=$(snapctl get token)
@@ -107,6 +107,37 @@ function factorio_token {
             if [[ "${#token}" -eq 30 ]]; then
                 snapctl set password="" token="$token"
             fi
+        fi
+    fi
+}
+
+# Handle transition of server files from SNAP_COMMON to SNAP_DATA and avoid
+# breaking settings file with new configuration options
+function factorio_move {
+    if [[ -z "$(ls "${SNAP_DATA}"/data/saves)" ]]; then
+        if [[ ! -z "$(ls "${SNAP_COMMON}"/saves)" ]]; then
+            files=(saves mods scenarios player-data.json server-settings.json)
+            for file in "${files[@]}"; do
+                if [[ -d "${SNAP_COMMON}"/"$file" ]]; then
+                    cp "${SNAP_COMMON}"/"$file"/* "${SNAP_DATA}"/data/"$file"/
+                    chown snap_daemon "$SNAP_DATA"/data/saves/
+                    chmod 777 "${SNAP_DATA}"/data/"$file"/*
+                    chown snap_daemon "${SNAP_DATA}"/data/"$file"/*
+                else
+                    if [[ -f "${SNAP_COMMON}"/"$file" ]]; then
+                        cp "${SNAP_COMMON}"/"$file" "${SNAP_DATA}"/data/"$file"
+                        chmod 777 "${SNAP_DATA}"/data/"$file"
+                        chown snap_daemon "${SNAP_DATA}"/data/"$file"
+                    fi
+                fi
+            done
+            snapctl set \
+                max-upload-slots=5 \
+                minimum-segment-size=25 \
+            	minimum-segment-size-peer-count=20 \
+	            maximum-segment-size=100 \
+	            maximum-segment-size-peer-count=10
+            "$SNAP"/meta/hooks/configure
         fi
     fi
 }
@@ -164,7 +195,7 @@ case "$1" in
         ;;
 
     service)
-        factorio_saves
+        factorio_move && factorio_saves
 
         cmd=(--verbose --start-server-load-latest)
         for arg in port bind rcon-port rcon-bind rcon-password; do
