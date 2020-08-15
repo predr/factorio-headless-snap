@@ -38,7 +38,11 @@ function mods_init {
 function mods_list {
 	mods_init || exit 1
 
-	mods_list=$(jq -r '(.mods[] | select(.name != "base") .name)' "$LIST")
+	if [[ -f "$LIST" ]]; then
+		mods_list=$(jq -r \
+			'(.mods[] | select(.name != "base") .name)' "$LIST")
+	fi
+
 	if [[ ! -z "$mods_list" ]]; then
 		echo "$mods_list"
 		return 0
