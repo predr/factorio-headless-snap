@@ -70,9 +70,6 @@ Using all these commands we can make a bash script to automate installations wit
     mods=(
         Honk
     )
-    admins=(
-        kovarex
-    )
     map=(
         --map-gen-seed 1337
         --create /var/snap/factorio-headless/current/data/saves/_autosave1.zip
@@ -86,9 +83,9 @@ Using all these commands we can make a bash script to automate installations wit
     snap stop $SNAP_INSTANCE_NAME
     snap set $SNAP_INSTANCE_NAME "\${settings[@]}"
     $SNAP_INSTANCE_NAME.mods install "\${mods[@]}"
-    $SNAP_INSTANCE_NAME.admins add \${admins[@]}
     $SNAP_INSTANCE_NAME "\${map[@]}"
     $SNAP_INSTANCE_NAME "\${preview[@]}"
+    $SNAP_INSTANCE_NAME.admins add kovarex
     snap start $SNAP_INSTANCE_NAME.service
     snap logs -f $SNAP_INSTANCE_NAME.service
 
