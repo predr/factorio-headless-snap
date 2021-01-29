@@ -4,6 +4,8 @@ description: |
   Change server settings and install mods in terminal with command line completion. Automate server installations.
 
     factorio-headless
+    factorio-headless.mods
+    factorio-headless.admins
 
 adopt-info: factorio
 base: core18
