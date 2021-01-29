@@ -132,6 +132,36 @@ function _factorio_headless {
     esac
 }
 
+function _factorio_headless_admins {
+
+    local cur prev words cword split
+    _init_completion -s || return
+
+    local ALL_OPTIONS='
+        list
+	    add
+	    remove
+    '
+
+    case "$prev" in
+        list)
+            ;;
+        add)
+            names=$(jq -r 'try .[]' "$SNAP_DATA"/data/server-adminlist.json)
+            reply=$( compgen -W "${names//\ /\%20}" -- "${cur//\\ /\%20}" )
+            COMPREPLY=( "${reply//\%20/\\ }" )
+            ;;
+        remove)
+            names=$(jq -r 'try .[]' "$SNAP_DATA"/data/server-adminlist.json)
+            reply=$( compgen -W "${names//\ /\%20}" -- "${cur//\\ /\%20}" )
+            COMPREPLY=( "${reply//\%20/\\ }" )
+            ;;
+        *)
+            COMPREPLY=($( compgen -W "$ALL_OPTIONS" -- "$cur" ))
+            ;;
+    esac
+}
+
 function _factorio_headless_mods {
 
     local cur prev words cword split
@@ -169,4 +199,5 @@ function _factorio_headless_mods {
 }
 
 complete -F _factorio_headless factorio-headless
+complete -F _factorio_headless_admins factorio-headless.admins
 complete -F _factorio_headless_mods factorio-headless.mods

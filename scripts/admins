@@ -1,0 +1,71 @@
+#!/bin/bash
+
+LIST="$SNAP_DATA"/data/server-adminlist.json
+
+function admins_help {
+	echo 'Manage server admins. Takes effect after server restart.
+
+Usage: factorio-headless.admins <command> [<name>]
+
+Commands:
+    list             Lists current admins
+    add <name>       Add another admin
+    remove <name>    Remove admin
+'
+}
+
+function admins_init {
+	if [[ -f "$LIST" ]]; then
+		return 0
+	fi
+	return 1
+}
+
+function admins_list {
+	admins_init || exit 1
+
+	local admins=$(jq -r 'try .[]' "$LIST" 2> /dev/null)
+	if [[ ! -z "$admins" ]]; then
+		echo "$admins"
+		return 0
+	fi
+	echo "Server has no admins"
+}
+
+function admins_add {
+	admins_init || exit 1
+	
+	local new_list=$(cat "$LIST")
+	while [[ ! -z "$@" ]]; do
+		new_list=$(jq -r --arg name "${1}" \
+			'try map(select(. != $name)) | try . += [$name]' \
+			<<< "$new_list" 2> /dev/null)
+		shift
+	done
+
+	if [[ ! -z "$new_list" ]]; then
+		echo "$new_list" > "$LIST"
+	fi
+}
+
+function admins_remove {
+	admins_init || exit 1
+		
+	new_list=$(cat "$LIST")
+	while [[ ! -z "$@" ]]; do
+		new_list=$(jq -r --arg name "${1}" \
+			'try . -= [$name]' <<< "$new_list" 2> /dev/null)
+		shift
+	done
+
+	if [[ ! -z "$new_list" ]]; then
+		echo "$new_list" > "$LIST"
+	fi
+}
+
+case "$1" in
+    list)    admins_list;;
+	add)     shift; admins_add     "$@";;
+	remove)  shift; admins_remove  "$@";;
+	*)       admins_help;;
+esac

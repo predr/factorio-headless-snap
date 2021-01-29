@@ -1,24 +1,9 @@
 name: factorio-headless
-summary: Headless server for Factorio running as a system service
+summary: Server for Factorio a game in which you build and maintain factories
 description: |
-  Change configuration options
+  Change server settings and install mods in terminal with command line completion. Automate server installations.
 
-    sudo snap get factorio-headless
-    sudo snap set factorio-headless admins='["kovarex"]'
-    sudo snap set factorio-headless game-password=1337
-    sudo snap restart factorio-headless
-
-  Control the service and check status
-
-    sudo snap start factorio-headless
-    sudo snap stop factorio-headless
-    sudo snap start --enable factorio-headless
-    sudo snap stop --disable factorio-headless
-    sudo snap services | grep factorio-headless
-
-  Server files location
-
-    ls /var/snap/factorio-headless/common
+    factorio-headless
 
 adopt-info: factorio
 base: core18
@@ -39,6 +24,11 @@ apps:
       - network
       - network-bind
   
+  admins:
+    command: wrapper admins
+    completer: completion
+    plugs: *plugs
+
   mods:
     command: wrapper mods
     completer: completion

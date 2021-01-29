@@ -70,6 +70,9 @@ Using all these commands we can make a bash script to automate installations wit
     mods=(
         Honk
     )
+    admins=(
+        kovarex
+    )
     map=(
         --map-gen-seed 1337
         --create /var/snap/factorio-headless/current/data/saves/_autosave1.zip
@@ -83,6 +86,7 @@ Using all these commands we can make a bash script to automate installations wit
     snap stop $SNAP_INSTANCE_NAME
     snap set $SNAP_INSTANCE_NAME "\${settings[@]}"
     $SNAP_INSTANCE_NAME.mods install "\${mods[@]}"
+    $SNAP_INSTANCE_NAME.admins add \${admins[@]}
     $SNAP_INSTANCE_NAME "\${map[@]}"
     $SNAP_INSTANCE_NAME "\${preview[@]}"
     snap start $SNAP_INSTANCE_NAME.service
@@ -178,6 +182,18 @@ for dir in "${dirs[@]}"; do
     fi
 done
 
+if [[ ! -f "${SNAP_DATA}"/data/server-adminlist.json ]]; then
+    echo "[]" > "${SNAP_DATA}"/data/server-adminlist.json
+    chmod 777 "$SNAP_DATA"/data/server-adminlist.json
+    chown snap_daemon "$SNAP_DATA"/data/server-adminlist.json
+fi
+
+if [[ ! -f "$SNAP_DATA"/data/mods/mod-list.json ]]; then
+    echo '{"mods": [{"name": "base","enabled": true}]}' > "$SNAP_DATA"/data/mods/mod-list.json
+    chmod 777 "$SNAP_DATA"/data/mods/mod-list.json
+    chown snap_daemon "$SNAP_DATA"/data/mods/mod-list.json
+fi
+
 factorio_token
 
 # Each needs to be handled differently and all need to work together.
@@ -188,6 +204,11 @@ case "$1" in
             factorio_help && exit 0
         fi
         "${SNAP}"/factorio/bin/x64/factorio "$@"
+        ;;
+
+    admins)
+        shift
+        "$SNAP"/admins "$@"
         ;;
 
     mods)
